@@ -1,0 +1,32 @@
+import { Router } from 'express';
+import { publicRoutes } from './public.routes.js';
+import { authRoutes } from './auth.routes.js';
+import { userRoutes } from './user.routes.js';
+import { storeRoutes } from './store.routes.js';
+import { productRoutes } from './product.routes.js';
+import { eventRoutes } from './event.routes.js';
+import { contestRoutes } from './contest.routes.js';
+import { liveRoutes } from './live.routes.js';
+import { cartRoutes } from './cart.routes.js';
+import { orderRoutes } from './order.routes.js';
+import { paymentRoutes } from './payment.routes.js';
+import { uploadRoutes } from './upload.routes.js';
+import { adminRoutes } from './admin.routes.js';
+import { webhookRoutes } from './webhook.routes.js';
+
+export const router = Router();
+
+router.use(publicRoutes);
+router.use(authRoutes);
+router.use(userRoutes);
+router.use(storeRoutes);
+router.use(productRoutes);
+router.use(eventRoutes);
+router.use(contestRoutes);
+router.use(liveRoutes);
+router.use(cartRoutes);
+router.use(orderRoutes);
+router.use(paymentRoutes);
+router.use(uploadRoutes);
+router.use(adminRoutes);
+router.use(webhookRoutes);
