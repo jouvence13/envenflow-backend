@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { authMiddleware } from '../core/middleware/auth.middleware';
+import { roleMiddleware } from '../core/middleware/role.middleware';
 import { asyncHandler } from '../core/middleware/async.middleware';
 import { prisma } from '../libs/prisma';
 import { ValidationError } from '../core/errors/ValidationError';
@@ -86,6 +87,7 @@ storeRoutes.use('/stores', authMiddleware);
 
 storeRoutes.post(
 	'/stores',
+	roleMiddleware(['seller', 'admin']),
 	asyncHandler(async (request, response) => {
 		const parsed = createStoreSchema.safeParse(request.body);
 

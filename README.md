@@ -106,6 +106,27 @@ npx prisma migrate dev --name init
 npm run prisma:seed
 ```
 
+### Local admin credentials (development)
+
+After running `npm run prisma:seed`, a default admin account is available:
+
+- Email: `admin@envenflow.com`
+- Password: `Admin1234!`
+
+You can override the password during seeding:
+
+```bash
+SEED_ADMIN_PASSWORD="YourStrongPassword" npm run prisma:seed
+```
+
+PowerShell (Windows):
+
+```powershell
+$env:SEED_ADMIN_PASSWORD="YourStrongPassword"; npm run prisma:seed
+```
+
+Use this admin account to approve organizer/seller requests from `/admin-space`.
+
 ## 7) Prisma Client Usage Examples
 
 ### Create store application
