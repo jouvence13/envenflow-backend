@@ -2,9 +2,11 @@ import { createServer } from 'http';
 import { createApp } from './app';
 import { env } from './config/env';
 import { checkDatabaseConnection } from './config/database';
+import { ensureAdminUser } from './core/utils/setup';
 
 async function bootstrap() {
   await checkDatabaseConnection();
+  await ensureAdminUser();
 
   const app = createApp();
   const server = createServer(app);
