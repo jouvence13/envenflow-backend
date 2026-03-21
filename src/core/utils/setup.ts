@@ -22,14 +22,14 @@ export async function ensureAdminUser() {
   }
 
   // 2. Check if Admin exists
-  const existingAdmin = await prisma.user.findUnique({
+  let admin = await prisma.user.findUnique({
     where: { email: adminEmail }
   });
 
-  if (!existingAdmin) {
+  if (!admin) {
     const passwordHash = await hashPassword(adminPassword);
     
-    const admin = await prisma.user.create({
+    admin = await prisma.user.create({
       data: {
         email: adminEmail,
         passwordHash,
@@ -57,5 +57,25 @@ export async function ensureAdminUser() {
     
     // eslint-disable-next-line no-console
     console.log('[setup] Admin user created automatically');
+  }
+
+  // 3. Ensure Default Organization for Admin
+  const adminOrg = await prisma.organization.findUnique({
+    where: { slug: 'evenflow-admin-org' }
+  });
+
+  if (!adminOrg) {
+    await prisma.organization.create({
+      data: {
+        name: 'Evenflow Admin Org',
+        slug: 'evenflow-admin-org',
+        type: 'ORGANIZER',
+        ownerUserId: admin.id,
+        status: 'ACTIVE',
+        publicationStatus: 'PUBLISHED'
+      }
+    });
+    // eslint-disable-next-line no-console
+    console.log('[setup] Admin organization created automatically');
   }
 }
