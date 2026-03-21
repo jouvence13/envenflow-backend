@@ -1,5 +1,5 @@
 import cors from 'cors';
-import express from 'express';
+import express, { Request } from 'express';
 import helmet from 'helmet';
 import { corsOptions } from './config/cors';
 import { httpLogger } from './config/logger';
@@ -12,7 +12,15 @@ export function createApp() {
 
   app.use(helmet());
   app.use(cors(corsOptions));
-  app.use(express.json({ limit: '2mb' }));
+  app.use(
+    express.json({
+      limit: '2mb',
+      verify: (request: Request, _response, buffer) => {
+        // Keep raw payload for signed webhooks (FedaPay signature validation).
+        (request as Request & { rawBody?: string }).rawBody = buffer.toString('utf8');
+      }
+    })
+  );
   app.use(httpLogger);
   app.use(rateLimitMiddleware());
 

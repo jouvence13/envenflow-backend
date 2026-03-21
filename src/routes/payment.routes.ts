@@ -1,12 +1,14 @@
 import { Router } from 'express';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
+import { PaymentProvider } from '@prisma/client';
 import { authMiddleware } from '../core/middleware/auth.middleware';
 import { asyncHandler } from '../core/middleware/async.middleware';
 import { prisma } from '../libs/prisma';
 import { ValidationError } from '../core/errors/ValidationError';
 import { NotFoundError } from '../core/errors/NotFoundError';
 import { paymentGateway } from '../libs/payment';
+import { env } from '../config/env';
 
 export const paymentRoutes = Router();
 
@@ -24,6 +26,25 @@ const initializePaymentSchema = z
 
 function toNumber(value: unknown) {
 	return Number(value || 0);
+}
+
+function toSupportedProvider(provider: PaymentProvider): 'KKIAPAY' | 'FEDAPAY' | 'STRIPE' {
+	if (provider === 'MANUAL') {
+		throw new ValidationError('Manual payment provider cannot be initialized from checkout');
+	}
+
+	return provider;
+}
+
+function buildPaymentCallbackUrl() {
+	if (env.FEDAPAY_CALLBACK_URL) {
+		return env.FEDAPAY_CALLBACK_URL;
+	}
+
+	const [firstOrigin] = env.CORS_ORIGIN.split(',').map((origin) => origin.trim()).filter(Boolean);
+	const baseOrigin = (firstOrigin || 'http://localhost:5173').replace(/\/$/, '');
+
+	return `${baseOrigin}/payment`;
 }
 
 paymentRoutes.post(
@@ -124,13 +145,40 @@ paymentRoutes.post(
 			throw new ValidationError('Invalid payable amount');
 		}
 
+		const payer = await prisma.user.findUnique({
+			where: { id: request.user!.id },
+			select: {
+				email: true,
+				phone: true,
+				profile: {
+					select: {
+						firstName: true,
+						lastName: true
+					}
+				}
+			}
+		});
+
+		if (!payer) {
+			throw new NotFoundError('Payer not found');
+		}
+
 		const paymentReference = `PAY-${Date.now()}-${randomUUID().slice(0, 8).toUpperCase()}`;
+		const provider = toSupportedProvider(paymentMethod.provider);
 
 		const gatewayResult = await paymentGateway.initialize({
-			provider: paymentMethod.provider,
+			provider,
 			amount,
 			currency,
-			reference: paymentReference
+			reference: paymentReference,
+			callbackUrl: buildPaymentCallbackUrl(),
+			description: `Order payment ${order.reference}`,
+			customer: {
+				email: payer.email,
+				phoneNumber: payer.phone || undefined,
+				firstName: payer.profile?.firstName || undefined,
+				lastName: payer.profile?.lastName || undefined
+			}
 		});
 
 		const payment = await prisma.payment.create({

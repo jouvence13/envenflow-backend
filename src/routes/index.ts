@@ -12,6 +12,7 @@ import { orderRoutes } from './order.routes.js';
 import { paymentRoutes } from './payment.routes.js';
 import { uploadRoutes } from './upload.routes.js';
 import { adminRoutes } from './admin.routes.js';
+import { organizerRoutes } from './organizer.routes.js';
 import { webhookRoutes } from './webhook.routes.js';
 
 export const router = Router();
@@ -29,4 +30,5 @@ router.use(orderRoutes);
 router.use(paymentRoutes);
 router.use(uploadRoutes);
 router.use(adminRoutes);
+router.use(organizerRoutes);
 router.use(webhookRoutes);
